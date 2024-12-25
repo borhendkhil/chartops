@@ -1,0 +1,43 @@
+1. Get the application URLs by running these commands:
+
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+   {{- range .paths }}
+      Frontend URL: http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}/frontend{{ .path }}
+      Backend URL: http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}/backend{{ .path }}
+   {{- end }}
+{{- end }}
+{{- else if contains "NodePort" .Values.service.frontend.type }}
+   # Frontend Service
+   export FRONTEND_NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "my-app.fullname" . }}-frontend)
+   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+   echo Frontend URL: http://$NODE_IP:$FRONTEND_NODE_PORT
+
+   # Backend Service
+   export BACKEND_NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "my-app.fullname" . }}-backend)
+   echo Backend URL: http://$NODE_IP:$BACKEND_NODE_PORT
+{{- else if contains "LoadBalancer" .Values.service.frontend.type }}
+   NOTE: It may take a few minutes for the LoadBalancer IPs to be available.
+         You can watch their statuses by running:
+         'kubectl get --namespace {{ .Release.Namespace }} svc -w'
+
+   # Frontend Service
+   export FRONTEND_SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "my-app.fullname" . }}-frontend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+   echo Frontend URL: http://$FRONTEND_SERVICE_IP:{{ .Values.service.frontend.port }}
+
+   # Backend Service
+   export BACKEND_SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "my-app.fullname" . }}-backend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+   echo Backend URL: http://$BACKEND_SERVICE_IP:{{ .Values.service.backend.port }}
+{{- else if contains "ClusterIP" .Values.service.frontend.type }}
+   # Frontend Service
+   export FRONTEND_POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "my-app.name" . }},app.kubernetes.io/component=frontend,app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+   export FRONTEND_CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $FRONTEND_POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+   echo "Frontend: Visit http://127.0.0.1:8080 to use your application"
+   kubectl --namespace {{ .Release.Namespace }} port-forward $FRONTEND_POD_NAME 8080:$FRONTEND_CONTAINER_PORT
+
+   # Backend Service
+   export BACKEND_POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "my-app.name" . }},app.kubernetes.io/component=backend,app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+   export BACKEND_CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $BACKEND_POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+   echo "Backend: Visit http://127.0.0.1:8081 to use your application"
+   kubectl --namespace {{ .Release.Namespace }} port-forward $BACKEND_POD_NAME 8081:$BACKEND_CONTAINER_PORT
+{{- end }}
