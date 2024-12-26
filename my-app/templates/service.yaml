@@ -10,5 +10,5 @@ spec:
       targetPort: {{ .Values.service.frontend.port }}
       protocol: TCP
   selector:
-    app.kubernetes.io/name: {{ .Chart.Name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: my-app
+    app.kubernetes.io/component: frontend

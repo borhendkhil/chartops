@@ -38,4 +38,4 @@ spec:
       volumes:
         - name: mysql-data
           persistentVolumeClaim:
-            claimName: {{ .Release.Name }}-mysql-pvc
+            claimName: mysql-pvc

@@ -53,10 +53,10 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
             - name: DB_HOST
-              value: "{{ .Release.Name }}-mysql"
+              value: "{{ .Release.Name }}-mysql.default.svc.cluster.local"
             - name: DB_PORT
               value: "3306"
-            - name: DB_USER
+            - name: DB_USERNAME
               value: {{ .Values.mysql.user }}
             - name: DB_PASSWORD
               value: {{ .Values.mysql.password }}

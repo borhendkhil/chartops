@@ -71,10 +71,10 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
 
 mysql:
-  rootPassword: rootpassword
-  database: mydatabase
   user: myuser
   password: mypassword
+  database: mydatabase
+  rootPassword: rootpassword
 
 
   
